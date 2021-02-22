@@ -38,6 +38,9 @@
 #define ATTESTATION_PAGE        (PAGES - 15)
 #define ATTESTATION_PAGE_ADDR   (0x08000000 + ATTESTATION_PAGE*PAGE_SIZE)
 
+// store the bitcoin state
+#define BTC_STATE_PAGE         (PAGES - 18)
+
 // End of application code.  Leave some extra room for future data storage.
 // NOT included in application
 #define APPLICATION_END_PAGE	((PAGES - 20))

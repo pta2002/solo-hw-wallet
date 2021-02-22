@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../targets/stm32l432/src/flash.h"
+#include "../targets/stm32l432/src/memory_layout.h"
 
 #include "device.h"
 #include "ctaphid.h"
@@ -22,6 +24,7 @@
 // and the following headers too
 #include "sha2.h"
 #include "crypto.h"
+#include <uECC.h>
 
 #include APP_CONFIG
 
@@ -754,6 +757,51 @@ uint8_t ctaphid_custom_command(int len, CTAP_RESPONSE * ctap_resp, CTAPHID_WRITE
         break;
 #endif
 
+#if !defined(IS_BOOTLOADER)
+        case CTAPHID_BTC:
+            printf1(TAG_HID, "CTAPHID_BTC\n");
+
+            // Is the bitcoin key initialized?
+            BitcoinState *btc_state = flash_addr(BTC_STATE_PAGE);
+            // Erased memory is all 1s
+            if (btc_state->is_initialized) {
+                flash_erase_page(BTC_STATE_PAGE);
+                printf1(TAG_GREEN, "Initializing bitcoin state\n");
+                BitcoinState s;
+                ctap_generate_rng(&s.chain_code, 32);
+                ctap_generate_rng(&s.private_key, 32);
+                s.is_initialized = 0;
+                flash_write(flash_addr(BTC_STATE_PAGE), &s, sizeof(BitcoinState));
+                printf1(TAG_GREEN, "Initialized!\n");
+            }
+
+            // We want to return the extended public key
+            uint8_t public_key[96]; // 32 bytes for X, 32 for Y and 32 for chain code
+            uECC_compute_public_key(&btc_state->private_key, &public_key, uECC_secp256k1());
+
+            // Copy over the chain code
+            memmove(&public_key + 64, &btc_state->chain_code, 32);
+
+            memmove(ctap_buffer, &public_key, 196);
+            wb->bcnt = 64;
+            ctaphid_write(wb, ctap_buffer, 64);
+            ctaphid_write(wb, NULL, 0);
+            return 1;
+
+        case CTAPHID_BTC_ERASE:
+            printf1(TAG_HID, "CTAPHID_BTC_ERASE\n");
+
+            if (ctap_user_presence_test(8000)) {
+                flash_erase_page(BTC_STATE_PAGE);
+                ctaphid_write(wb, NULL, 0);
+                return 1;
+            }
+
+            ctaphid_send_error(wb->cid, CTAP2_ERR_OPERATION_DENIED);
+            return 0;
+        break;
+#endif
+
         case CTAPHID_GETVERSION:
             printf1(TAG_HID,"CTAPHID_GETVERSION\n");
             wb->bcnt = 4;
@@ -786,7 +834,7 @@ uint8_t ctaphid_custom_command(int len, CTAP_RESPONSE * ctap_resp, CTAPHID_WRITE
              * Load external key.  Useful for enabling backups.
              * bytes:                   4                     4                      96
              * payload:  version [maj rev patch RFU]| counter_replacement (BE) | master_key |
-             * 
+             *
              * Counter should be increased by a large amount, e.g. (0x10000000)
              * to outdo any previously lost/broken keys.
             */

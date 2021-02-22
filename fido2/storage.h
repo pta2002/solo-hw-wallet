@@ -67,4 +67,12 @@ typedef struct
 
 extern AuthenticatorState STATE;
 
+// Bitcoin stuff
+typedef struct
+{
+    uint8_t is_initialized;
+    uint8_t private_key[32];
+    uint8_t chain_code[32];
+} BitcoinState;
+
 #endif

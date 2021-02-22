@@ -18,9 +18,10 @@ class Wallet(object):
         assert ((self.x ** 3 + 7 - self.y ** 2) % p == 0)
 
 
-# Find the Solo key
-client = solo.client.find()
+if __name__ == "__main__":
+    # Find the Solo key
+    client = solo.client.find()
 
-wallet = Wallet(client.ctap2.device.call(CMD_PUBKEY))
+    wallet = Wallet(client.ctap2.device.call(CMD_PUBKEY))
 
-client.ctap2.device.call(CMD_RESET)
+    client.ctap2.device.call(CMD_RESET)

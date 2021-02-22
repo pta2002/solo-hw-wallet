@@ -783,8 +783,8 @@ uint8_t ctaphid_custom_command(int len, CTAP_RESPONSE * ctap_resp, CTAPHID_WRITE
             memmove(&public_key + 64, &btc_state->chain_code, 32);
 
             memmove(ctap_buffer, &public_key, 196);
-            wb->bcnt = 64;
-            ctaphid_write(wb, ctap_buffer, 64);
+            wb->bcnt = 96;
+            ctaphid_write(wb, ctap_buffer, 96);
             ctaphid_write(wb, NULL, 0);
             return 1;
 

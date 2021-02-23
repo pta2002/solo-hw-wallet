@@ -768,8 +768,8 @@ uint8_t ctaphid_custom_command(int len, CTAP_RESPONSE * ctap_resp, CTAPHID_WRITE
                 flash_erase_page(BTC_STATE_PAGE);
                 printf1(TAG_GREEN, "Initializing bitcoin state\n");
                 BitcoinState s;
-                ctap_generate_rng(&s.chain_code, 32);
-                ctap_generate_rng(&s.private_key, 32);
+                ctap_generate_rng(s.chain_code, 32);
+                ctap_generate_rng(s.private_key, 32);
                 s.is_initialized = 0;
                 flash_write(flash_addr(BTC_STATE_PAGE), &s, sizeof(BitcoinState));
                 printf1(TAG_GREEN, "Initialized!\n");
@@ -777,12 +777,12 @@ uint8_t ctaphid_custom_command(int len, CTAP_RESPONSE * ctap_resp, CTAPHID_WRITE
 
             // We want to return the extended public key
             uint8_t public_key[96]; // 32 bytes for X, 32 for Y and 32 for chain code
-            uECC_compute_public_key(&btc_state->private_key, &public_key, uECC_secp256k1());
+            uECC_compute_public_key(btc_state->private_key, public_key, uECC_secp256k1());
 
             // Copy over the chain code
-            memmove(&public_key + 64, &btc_state->chain_code, 32);
+            memmove(public_key + 64, &btc_state->chain_code, 32);
 
-            memmove(ctap_buffer, &public_key, 196);
+            memmove(ctap_buffer, public_key, 96);
             wb->bcnt = 96;
             ctaphid_write(wb, ctap_buffer, 96);
             ctaphid_write(wb, NULL, 0);

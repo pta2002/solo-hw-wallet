@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "solowallet"
+version = "0.1.0"
+description = "Command-line client and library for the hardware wallet custom firmware for the Solo key"
+authors = ["Pedro Alves <pta2002@pta2002.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+base58 = "^2.1.0"
+solo-python = "^0.0.27"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
